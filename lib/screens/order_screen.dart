@@ -198,7 +198,7 @@ class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStat
                   padding: const EdgeInsets.all(16),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.8,
+                    childAspectRatio: 0.68,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
                   ),
@@ -221,7 +221,7 @@ class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStat
                   padding: const EdgeInsets.all(16),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.8,
+                    childAspectRatio: 0.68,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
                   ),
