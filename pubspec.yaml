@@ -1,0 +1,48 @@
+name: balanced_meal
+description: A meal prep app that helps users order meals based on their calorie needs.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.17.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  http: ^0.13.5
+  firebase_core: ^2.14.0
+  cloud_firestore: ^4.8.2
+  liquid_progress_indicator_v2: ^0.5.0
+  flutter_screenutil: ^5.9.3
+  flutter_svg: ^2.0.9
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 300
+    - family: Abhaya Libre
+      fonts:
+        - asset: assets/fonts/abhaya-libre-extrabold.ttf
+          weight: 800
+    - family: Questrial
+      fonts:
+        - asset: assets/fonts/questrial.ttf
+          weight: 400
+
