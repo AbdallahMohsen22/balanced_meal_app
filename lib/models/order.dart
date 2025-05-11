@@ -13,7 +13,11 @@ class Order {
     return {
       'items': items
           .where((item) => item.quantity > 0)
-          .map((item) => item.toJson())
+          .map((item) => {
+        'name': item.foodName,
+        'total_price': item.quantity * 12, // Using fixed price of $12 per item
+        'quantity': item.quantity,
+      })
           .toList(),
     };
   }

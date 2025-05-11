@@ -1,4 +1,6 @@
 import 'package:balanced_meal/core/helpers/extensions.dart';
+import 'package:balanced_meal/core/helpers/spacing.dart';
+import 'package:balanced_meal/core/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
@@ -28,11 +30,8 @@ class _OrderScreenState extends State<OrderScreen> {
   List<Ingredient> _carbIngredients = [];
   List<Ingredient> _selectedIngredients = [];
   int _totalCalories = 0;
-  int _totalPrice = 0;
   bool _isLoading = true;
-
   String _selectedCategory = 'Vegetables';
-  final List<String> _categories = ['Vegetables', 'Meats', 'Carbs'];
 
   @override
   void initState() {
@@ -59,21 +58,24 @@ class _OrderScreenState extends State<OrderScreen> {
       });
     }
   }
+  double get _totalPrice {
+    int totalQuantity = 0;
+    for (var ingredient in _selectedIngredients) {
+      totalQuantity += ingredient.quantity;
+    }
+    return totalQuantity * 12.0;
+  }
 
-  // void _updateTotalCalories() {
-  //   int totalCal = 0;
-  //   int totalPrice = 0;
-  //
-  //   for (var ingredient in _selectedIngredients) {
-  //     totalCal += ingredient.totalCalories;
-  //     totalPrice += ingredient.price * ingredient.quantity;
-  //   }
-  //
-  //   setState(() {
-  //     _totalCalories = totalCal;
-  //     _totalPrice = totalPrice;
-  //   });
-  // }
+  void _updateTotalCalories() {
+    int total = 0;
+    for (var ingredient in [..._meatIngredients, ..._vegetableIngredients, ..._carbIngredients]) {
+      total += ingredient.totalCalories;
+    }
+    setState(() {
+      _totalCalories = total;
+      _updateSelectedIngredients();
+    });
+  }
 
   void _updateSelectedIngredients() {
     _selectedIngredients = [
@@ -81,14 +83,6 @@ class _OrderScreenState extends State<OrderScreen> {
       ..._vegetableIngredients.where((i) => i.quantity > 0),
       ..._carbIngredients.where((i) => i.quantity > 0),
     ];
-    //_updateTotalCalories();
-  }
-
-  void _onQuantityChanged(Ingredient ingredient, int quantity) {
-    setState(() {
-      ingredient.quantity = quantity;
-      _updateSelectedIngredients();
-    });
   }
 
   bool get _isWithinCalorieRange {
@@ -101,16 +95,16 @@ class _OrderScreenState extends State<OrderScreen> {
     return _totalCalories / widget.userProfile.dailyCalories;
   }
 
-  List<Ingredient> _getCurrentCategoryIngredients() {
+  List<Ingredient> get _currentIngredients {
     switch (_selectedCategory) {
+      case 'Meat':
+        return _meatIngredients;
       case 'Vegetables':
         return _vegetableIngredients;
-      case 'Meats':
-        return _meatIngredients;
       case 'Carbs':
         return _carbIngredients;
       default:
-        return [];
+        return _vegetableIngredients;
     }
   }
 
@@ -124,93 +118,87 @@ class _OrderScreenState extends State<OrderScreen> {
         backgroundColor: ColorsManager.whiteColor,
         elevation: 0,
         leading: GestureDetector(
-          onTap: () {
-            context.pushNamed(Routes.userInfoScreen);
-          },
-          child: Icon(Icons.arrow_back_ios, color: Colors.black, size: 20.sp),
-        ),
+            onTap: () {
+              context.pushNamed(Routes.userInfoScreen);
+            },
+            child: Icon(Icons.arrow_left_outlined,
+                color: Colors.black, size: 25.sp)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
         children: [
-          // Category selector
-          Container(
-            height: 50,
-            margin: const EdgeInsets.only(bottom: 10),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                final category = _categories[index];
-                final isSelected = category == _selectedCategory;
+          // Main content with scrolling
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Vegetables section
+                  _buildIngredientSection(
+                    title: "Vegetables",
+                    ingredients: _vegetableIngredients,
+                  ),
 
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedCategory = category;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    margin: const EdgeInsets.only(left: 10),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.green.shade50 : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
-                      border: isSelected
-                          ? Border.all(color: Colors.green.shade700)
-                          : null,
-                    ),
-                    child: Text(
-                      category,
-                      style: TextStyle(
-                        color: isSelected ? Colors.green.shade700 : Colors.black,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  // Meat section
+                  _buildIngredientSection(
+                    title: "Meat",
+                    ingredients: _meatIngredients,
+                  ),
+
+                  // Carbs section
+                  _buildIngredientSection(
+                    title: "Carbs",
+                    ingredients: _carbIngredients,
+                  ),
+
+                  // Selected items summary
+                  if (_selectedIngredients.isNotEmpty)
+                    Container(
+                      padding: EdgeInsets.all(16.w),
+                      color: Colors.grey.shade100,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            height: 30.h,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _selectedIngredients.length,
+                              itemBuilder: (context, index) {
+                                final item = _selectedIngredients[index];
+                                return Container(
+                                  margin: EdgeInsets.only(right: 8.w),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12.w, vertical: 4.h),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20.r),
+                                    border: Border.all(color: Colors.grey.shade300),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text('${item.foodName} x${item.quantity}'),
+                                      SizedBox(width: 4.w),
+                                      Text(
+                                        '(${item.totalCalories} cal)',
+                                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Selected category title
-          Padding(
-            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 8),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                _selectedCategory,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                ],
               ),
             ),
           ),
 
-          // Ingredient horizontal list
-          Container(
-            height: 220,
-            padding: const EdgeInsets.only(bottom: 16),
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: _getCurrentCategoryIngredients().length,
-              itemBuilder: (context, index) {
-                final ingredient = _getCurrentCategoryIngredients()[index];
-                return HorizontalIngredientCard(
-                  ingredient: ingredient,
-                  onQuantityChanged: (quantity) {
-                    _onQuantityChanged(ingredient, quantity);
-                  },
-                );
-              },
-            ),
-          ),
 
-          // Spacer
-          const Spacer(),
 
           // Bottom calorie and price info
           Container(
@@ -220,49 +208,38 @@ class _OrderScreenState extends State<OrderScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Cal',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyles.font16BlackBold,
                     ),
                     Text(
                       '$_totalCalories Cal out of ${widget.userProfile.dailyCalories.toInt()} Cal',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _isWithinCalorieRange ? Colors.black : Colors.red,
-                      ),
+                      style: TextStyles.font14GreyColorRegular,
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                verticalSpace(12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Price',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyles.font16BlackBold,
                     ),
                     Text(
-                      '\$ $_totalPrice',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
+                      '\$${_totalPrice.toStringAsFixed(2)}',
+                      style:  TextStyles.font16primaryColor,
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                SizedBox(
+                verticalSpace(20),
+                /// Place order button (fixed at bottom)
+                Container(
                   width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _selectedIngredients.isNotEmpty
+                  padding: EdgeInsets.all(16.w),
+                  child: PrimaryButton(
+
+                    onPressed: _isWithinCalorieRange
                         ? () {
                       final order = Order(
                         items: _selectedIngredients,
@@ -278,18 +255,10 @@ class _OrderScreenState extends State<OrderScreen> {
                         ),
                       );
                     }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade200,
-                      foregroundColor: Colors.black54,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      'Place order',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                        : () {},
+                    buttonText: 'Place Order',
+                    textStyle: _isWithinCalorieRange ?TextStyles.font16WhiteBold : TextStyles.font16lightGreyColor,
+                    backgroundColor: _isWithinCalorieRange ?ColorsManager.primaryColor: ColorsManager.whiteButtonColor,
                   ),
                 ),
               ],
@@ -299,112 +268,47 @@ class _OrderScreenState extends State<OrderScreen> {
       ),
     );
   }
-}
 
-class HorizontalIngredientCard extends StatelessWidget {
-  final Ingredient ingredient;
-  final Function(int) onQuantityChanged;
-
-  const HorizontalIngredientCard({
-    Key? key,
-    required this.ingredient,
-    required this.onQuantityChanged,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 180,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
+  Widget _buildIngredientSection({
+    required String title,
+    required List<Ingredient> ingredients,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          child: Text(
+            title,
+            style: TextStyles.font20BlackBold,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
-            ),
-            child: Container(
-              height: 100,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(ingredient.imageUrl),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
+        ),
 
-          // Details
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  ingredient.foodName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+        SizedBox(
+          height: 170.h,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: ingredients.length,
+            itemBuilder: (context, index) {
+              return SizedBox(
+                width: MediaQuery.of(context).size.width * 0.45,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w),
+                  child: IngredientCard(
+                    ingredient: ingredients[index],
+                    onQuantityChanged: (quantity) {
+                      setState(() {
+                        ingredients[index].quantity = quantity;
+                        _updateTotalCalories();
+                      });
+                    },
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '12 Cal',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '\$12',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        onQuantityChanged(ingredient.quantity + 1);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                        minimumSize: const Size(60, 30),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: Text(
-                        ingredient.quantity > 0 ? 'Added' : 'Add',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

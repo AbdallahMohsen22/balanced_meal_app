@@ -2,6 +2,7 @@ import 'package:balanced_meal/balanced_meal_app.dart';
 import 'package:balanced_meal/core/theming/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../models/ingredient.dart';
 import '../theming/styles.dart';
 
@@ -33,7 +34,7 @@ class IngredientCard extends StatelessWidget {
               aspectRatio: 16 / 9,
               child: Image.network(
                 ingredient.imageUrl,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey.shade200,
@@ -52,61 +53,61 @@ class IngredientCard extends StatelessWidget {
 
           // Content
           Padding(
-            padding:  EdgeInsets.symmetric(vertical: 12.h,horizontal: 2.w),
+            padding:  EdgeInsets.only(top: 10.h,right: 8.w,left: 8.w,),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      ingredient.foodName,
-                      style:  TextStyles.font14BlackSemiBold,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        ingredient.foodName,
+                        style:  TextStyles.font14BlackSemiBold,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    Text(
-                      '12 cal',
-                      style:  TextStyles.font14GreyBold,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+
+                    Expanded(
+                      child: Text(
+                        '12 cal',
+                        style:  TextStyles.font14GreyColorRegular,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${ingredient.calories} cal',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Quantity control
-                    ingredient.quantity == 0
-                        ? TextButton(
-                            onPressed: () => onQuantityChanged(1),
-                            style: TextButton.styleFrom(
-                              backgroundColor: ColorsManager.primaryColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15.sp),
-                              ),
-                            ),
-                            child: Text(
-                              'Add',
-                              style: TextStyles.font16WhiteBold,
-                            ),
-                          )
-                        :
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(20),
+
+                Padding(
+                  padding: EdgeInsets.only(top: 10.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '\$12',
+                        style: TextStyles.font16BlackBold,
                       ),
-                      child: Row(
+
+                      // Quantity control
+                      ingredient.quantity == 0
+                          ? TextButton(
+                              onPressed: () => onQuantityChanged(1),
+                              style: TextButton.styleFrom(
+                                backgroundColor: ColorsManager.primaryColor,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15.sp),
+                                ),
+                              ),
+                              child: Text(
+                                'Add',
+                                style: TextStyles.font16WhiteBold,
+                              ),
+                            )
+                          :
+                      Row(
                         children: [
                           IconButton(
                             constraints: const BoxConstraints(
@@ -114,7 +115,11 @@ class IngredientCard extends StatelessWidget {
                               minHeight: 30,
                             ),
                             padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.remove, size: 18),
+                            icon: SvgPicture.asset(
+                              'assets/images/remove.svg',
+                              height: 18.h,
+                              width: 18.w,
+                            ),
                             onPressed: ingredient.quantity > 0
                                 ? () => onQuantityChanged(ingredient.quantity - 1)
                                 : null,
@@ -131,23 +136,28 @@ class IngredientCard extends StatelessWidget {
                               minHeight: 30,
                             ),
                             padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.add, size: 18),
+                            icon: SvgPicture.asset(
+                              'assets/images/add.svg',
+                              height: 18.h,
+                              width: 18.w,
+                            ),
                             onPressed: () => onQuantityChanged(ingredient.quantity + 1),
                           ),
                         ],
                       ),
-                    ),
 
-                    // // Total calories
-                    // if (ingredient.quantity > 0)
-                    //   Text(
-                    //     '${ingredient.totalCalories}',
-                    //     style: TextStyle(
-                    //       fontWeight: FontWeight.bold,
-                    //       color: Colors.green.shade700,
-                    //     ),
-                    //   ),
-                  ],
+
+                      // // Total calories
+                      // if (ingredient.quantity > 0)
+                      //   Text(
+                      //     '${ingredient.totalCalories}',
+                      //     style: TextStyle(
+                      //       fontWeight: FontWeight.bold,
+                      //       color: Colors.green.shade700,
+                      //     ),
+                      //   ),
+                    ],
+                  ),
                 ),
               ],
             ),
