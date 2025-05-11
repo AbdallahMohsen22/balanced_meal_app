@@ -53,7 +53,7 @@ class IngredientCard extends StatelessWidget {
 
           // Content
           Padding(
-            padding:  EdgeInsets.only(top: 10.h,right: 8.w,left: 8.w,),
+            padding:  EdgeInsets.only(top: 10.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -72,7 +72,7 @@ class IngredientCard extends StatelessWidget {
 
                     Expanded(
                       child: Text(
-                        '12 cal',
+                        '${ingredient.calories} cal',
                         style:  TextStyles.font14GreyColorRegular,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -146,16 +146,6 @@ class IngredientCard extends StatelessWidget {
                         ],
                       ),
 
-
-                      // // Total calories
-                      // if (ingredient.quantity > 0)
-                      //   Text(
-                      //     '${ingredient.totalCalories}',
-                      //     style: TextStyle(
-                      //       fontWeight: FontWeight.bold,
-                      //       color: Colors.green.shade700,
-                      //     ),
-                      //   ),
                     ],
                   ),
                 ),

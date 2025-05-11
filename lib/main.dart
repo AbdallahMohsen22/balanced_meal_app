@@ -13,10 +13,10 @@ Future<void> main() async {
   try {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: "YOUR_API_KEY",
-        appId: "YOUR_APP_ID",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        projectId: "YOUR_PROJECT_ID",
+        apiKey: "AIzaSyATkg37PRjRSWv4znmwfyxCEvn-Uq84hHI",
+        appId: "1:862746834673:android:e96f8252b0227b7b3d9b50",
+        messagingSenderId: "862746834673",
+        projectId: "balancedmeal-c9fa4",
       ),
     );
     print('Firebase initialized successfully');

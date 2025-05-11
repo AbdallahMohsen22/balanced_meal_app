@@ -31,7 +31,6 @@ class _OrderScreenState extends State<OrderScreen> {
   List<Ingredient> _selectedIngredients = [];
   int _totalCalories = 0;
   bool _isLoading = true;
-  String _selectedCategory = 'Vegetables';
 
   @override
   void initState() {
@@ -58,6 +57,7 @@ class _OrderScreenState extends State<OrderScreen> {
       });
     }
   }
+
   double get _totalPrice {
     int totalQuantity = 0;
     for (var ingredient in _selectedIngredients) {
@@ -69,7 +69,7 @@ class _OrderScreenState extends State<OrderScreen> {
   void _updateTotalCalories() {
     int total = 0;
     for (var ingredient in [..._meatIngredients, ..._vegetableIngredients, ..._carbIngredients]) {
-      total += ingredient.totalCalories;
+      total += ingredient.calories * ingredient.quantity;
     }
     setState(() {
       _totalCalories = total;
@@ -95,16 +95,18 @@ class _OrderScreenState extends State<OrderScreen> {
     return _totalCalories / widget.userProfile.dailyCalories;
   }
 
-  List<Ingredient> get _currentIngredients {
-    switch (_selectedCategory) {
-      case 'Meat':
-        return _meatIngredients;
-      case 'Vegetables':
-        return _vegetableIngredients;
-      case 'Carbs':
-        return _carbIngredients;
-      default:
-        return _vegetableIngredients;
+  String _getCalorieStatusMessage() {
+    if (_totalCalories == 0) {
+      return 'Add ingredients to reach your daily calories';
+    } else if (!_isWithinCalorieRange) {
+      final remaining = widget.userProfile.dailyCalories - _totalCalories;
+      if (remaining > 0) {
+        return 'Add ${remaining.toStringAsFixed(0)} more calories';
+      } else {
+        return 'Remove ${(-remaining).toStringAsFixed(0)} calories';
+      }
+    } else {
+      return 'Perfect! Ready to place order';
     }
   }
 
@@ -118,16 +120,39 @@ class _OrderScreenState extends State<OrderScreen> {
         backgroundColor: ColorsManager.whiteColor,
         elevation: 0,
         leading: GestureDetector(
-            onTap: () {
-              context.pushNamed(Routes.userInfoScreen);
-            },
-            child: Icon(Icons.arrow_left_outlined,
-                color: Colors.black, size: 25.sp)),
+          onTap: () {
+            context.pushNamed(Routes.userInfoScreen);
+          },
+          child: Icon(
+            Icons.arrow_left_outlined,
+            color: Colors.black,
+            size: 25.sp,
+          ),
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
         children: [
+          // Daily calories header
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            color: ColorsManager.primaryColor.withOpacity(0.1),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Daily Calories Needed:',
+                  style: TextStyles.font14BlackSemiBold,
+                ),
+                Text(
+                  '${widget.userProfile.dailyCalories.toStringAsFixed(0)} cal',
+                  style: TextStyles.font14GreyBold,
+                ),
+              ],
+            ),
+          ),
+
           // Main content with scrolling
           Expanded(
             child: SingleChildScrollView(
@@ -173,7 +198,8 @@ class _OrderScreenState extends State<OrderScreen> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(20.r),
-                                    border: Border.all(color: Colors.grey.shade300),
+                                    border: Border.all(
+                                        color: Colors.grey.shade300),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -181,8 +207,10 @@ class _OrderScreenState extends State<OrderScreen> {
                                       Text('${item.foodName} x${item.quantity}'),
                                       SizedBox(width: 4.w),
                                       Text(
-                                        '(${item.totalCalories} cal)',
-                                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
+                                        '(${item.calories * item.quantity} cal)',
+                                        style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 12.sp),
                                       ),
                                     ],
                                   ),
@@ -197,8 +225,6 @@ class _OrderScreenState extends State<OrderScreen> {
               ),
             ),
           ),
-
-
 
           // Bottom calorie and price info
           Container(
@@ -228,17 +254,52 @@ class _OrderScreenState extends State<OrderScreen> {
                     ),
                     Text(
                       '\$${_totalPrice.toStringAsFixed(2)}',
-                      style:  TextStyles.font16primaryColor,
+                      style: TextStyles.font16primaryColor,
+                    ),
+                  ],
+                ),
+                verticalSpace(12),
+                // Calorie progress indicator
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Calorie Progress',
+                      style: TextStyles.font14GreyColorRegular,
+                    ),
+                    verticalSpace(4),
+                    SizedBox(
+                      height: 20.h,
+                      child: LiquidLinearProgressIndicator(
+                        value: _caloriePercentage.clamp(0.0, 1.0),
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation(
+                          _isWithinCalorieRange
+                              ? ColorsManager.primaryColor
+                              : Colors.orange,
+                        ),
+                        borderRadius: 10.r,
+                        borderWidth: 0,
+                        borderColor: Colors.transparent,
+                        center: Text(
+                          '${(_caloriePercentage * 100).toStringAsFixed(1)}%',
+                          style: TextStyles.font16WhiteBold,
+                        ),
+                      ),
+                    ),
+                    verticalSpace(4),
+                    Text(
+                      _getCalorieStatusMessage(),
+                      style: TextStyles.font14GreyColorRegular,
                     ),
                   ],
                 ),
                 verticalSpace(20),
-                /// Place order button (fixed at bottom)
+                // Place order button (fixed at bottom)
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(16.w),
                   child: PrimaryButton(
-
                     onPressed: _isWithinCalorieRange
                         ? () {
                       final order = Order(
@@ -255,10 +316,21 @@ class _OrderScreenState extends State<OrderScreen> {
                         ),
                       );
                     }
-                        : () {},
+                        : () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(_getCalorieStatusMessage()),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
                     buttonText: 'Place Order',
-                    textStyle: _isWithinCalorieRange ?TextStyles.font16WhiteBold : TextStyles.font16lightGreyColor,
-                    backgroundColor: _isWithinCalorieRange ?ColorsManager.primaryColor: ColorsManager.whiteButtonColor,
+                    textStyle: _isWithinCalorieRange
+                        ? TextStyles.font16WhiteBold
+                        : TextStyles.font16lightGreyColor,
+                    backgroundColor: _isWithinCalorieRange
+                        ? ColorsManager.primaryColor
+                        : ColorsManager.whiteButtonColor,
                   ),
                 ),
               ],
@@ -283,9 +355,8 @@ class _OrderScreenState extends State<OrderScreen> {
             style: TextStyles.font20BlackBold,
           ),
         ),
-
         SizedBox(
-          height: 170.h,
+          height: 175.h,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: ingredients.length,
